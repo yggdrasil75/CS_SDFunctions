@@ -1,25 +1,12 @@
-﻿using Microsoft.SqlServer.Server;
-using Newtonsoft.Json;
+﻿using Newtonsoft.Json;
 using Python.Runtime;
 using System;
 using System.Collections.Generic;
-using System.Diagnostics.Eventing.Reader;
 using System.IO;
 using System.Linq;
-using System.Net.Configuration;
 using System.Reflection;
-using System.Reflection.Emit;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices;
-using System.Runtime.Remoting.Services;
-using System.Security.Cryptography;
-using System.Security.Policy;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.Schemas;
 
 namespace SDFunctions
 {
@@ -138,7 +125,7 @@ namespace SDFunctions
 		}
 		private string pr(string InputPrompt, string PRValue)
 		{
-			var val = PRValue.Split('|');
+			string[] val = PRValue.Split('|');
 			if (val.Length != 2) throw new Exception("invalid promgroup replace. need a single =");
 			string match = val[0].Trim();
 			string replace = val[1].Trim();
@@ -203,7 +190,7 @@ namespace SDFunctions
 				//registerMode("HighRes Resize Height", GridSettingMode(dry = True, type = "integer", apply = applyField("hr_resize_y")))
 				//registerMode("HighRes Upscale to Width", GridSettingMode(dry = True, type = "integer", apply = applyField("hr_upscale_to_x")))
 				//registerMode("HighRes Upscale to Height", GridSettingMode(dry = True, type = "integer", apply = applyField("hr_upscale_to_y")))
-				foreach (var mode in new Dictionary<string, string> { { "var seed", "subseed" }, { "seed", "seed" }, { "width", "width" }, { "height", "height" }, { "device priority", "deviceidpriority" }, { "HighRes Resize Width", "hr_resize_x" }, { "HighRes Resize Height", "hr_resize_y" }, { "HighRes Upscale to Width", "hr_upscale_to_x" }, { "HighRes Upscale to Height", "hr_upscale_to_y" } })
+				foreach (KeyValuePair<string, string> mode in new Dictionary<string, string> { { "var seed", "subseed" }, { "seed", "seed" }, { "width", "width" }, { "height", "height" }, { "device priority", "deviceidpriority" }, { "HighRes Resize Width", "hr_resize_x" }, { "HighRes Resize Height", "hr_resize_y" }, { "HighRes Upscale to Width", "hr_upscale_to_x" }, { "HighRes Upscale to Height", "hr_upscale_to_y" } })
 				{
 					registerMode(mode.Key, new GridSettingMode(true, "integer", mode.Value));
 				}
@@ -212,7 +199,7 @@ namespace SDFunctions
 				//fields = ["promgroup", "negative_prompt", "randomtime"]
 				//for field, mode in enumerate(modes):
 				//	registerMode(mode, GridSettingMode(dry = True, type = "text", apply = applyField(fields[field])))
-				foreach (var mode in new Dictionary<string, string> { { "promgroup", "promgroup" }, { "negative promgroup", "negative_prompt" }, { "random", "randomtime" }, { "batch size", "batch_size" } })
+				foreach (KeyValuePair<string, string> mode in new Dictionary<string, string> { { "promgroup", "promgroup" }, { "negative promgroup", "negative_prompt" }, { "random", "randomtime" }, { "batch size", "batch_size" } })
 				{
 					registerMode(mode.Key, new GridSettingMode(true, "text", mode.Value));
 				}
@@ -222,7 +209,7 @@ namespace SDFunctions
 				//registerMode("CFG Scale", GridSettingMode(dry = True, type = "decimal", min = 0, max = 500, apply = applyField("cfg_scale")))
 				//registerMode("Image CFG Scale", GridSettingMode(dry = True, type = "decimal", min = 0, max = 500, apply = applyField("image_cfg_scale")))
 				//registerMode("Use Result Index", GridSettingMode(dry = True, type = "integer", min = 0, max = 500, apply = applyField("inf_grid_use_result_index")))
-				foreach (var mode in new Dictionary<string, string> { { "CFG Scale", "cfg_scale" }, { "Image CFG Scale", "image_cfg_scale" }, { "Use Result Index", "inf_grid_use_result_index" } })
+				foreach (KeyValuePair<string, string> mode in new Dictionary<string, string> { { "CFG Scale", "cfg_scale" }, { "Image CFG Scale", "image_cfg_scale" }, { "Use Result Index", "inf_grid_use_result_index" } })
 				{
 					registerMode(mode.Key, new GridSettingMode(true, "decimal", mode.Value, 0, 500));
 				}
@@ -237,7 +224,7 @@ namespace SDFunctions
 				//registerMode("Sigma TMax", GridSettingMode(dry = True, type = "decimal", min = 0, max = 1, apply = applyField("s_tmax")))
 				//registerMode("Sigma Noise", GridSettingMode(dry = True, type = "decimal", min = 0, max = 1, apply = applyField("s_noise")))
 				//registerMode("Image Mask Weight", GridSettingMode(dry = True, type = "decimal", min = 0, max = 1, apply = applyField("inpainting_mask_weight")))
-				foreach (var mode in new Dictionary<string, string> { { "var strength", "subseed_strength" }, { "denoising", "denoising_strength" }, { "ETA", "eta" }, { "sigma churn", "s_churn" }, { "sigma tmin", "s_tmin" }, { "sigma tmax", "s_tmax" }, { "sigma noise", "s_noise" }, { "Image Mask Weight", "inpainting_mask_weight" } })
+				foreach (KeyValuePair<string, string> mode in new Dictionary<string, string> { { "var strength", "subseed_strength" }, { "denoising", "denoising_strength" }, { "ETA", "eta" }, { "sigma churn", "s_churn" }, { "sigma tmin", "s_tmin" }, { "sigma tmax", "s_tmax" }, { "sigma noise", "s_noise" }, { "Image Mask Weight", "inpainting_mask_weight" } })
 				{
 					registerMode(mode.Key, new(true, "decimal", mode.Value, 0, 1));
 				}
@@ -322,7 +309,7 @@ namespace SDFunctions
 			Console.WriteLine("new imagecache");
 			tryinit();
 			Console.WriteLine("inited");
-			var processor = p as dynamic;
+			dynamic processor = p as dynamic;
 			processor.n_iter = 1;
 			processor.do_not_save_samples = true;
 			processor.do_not_save_grid = true;
@@ -350,7 +337,7 @@ namespace SDFunctions
 			}
 			else manualAxes = null;
 			//GridGenCore core = new(this);
-			var result = core.RunGridGen(processor, grid_file, output_file_path, this, output_file_path, doOverwrite ?? false, fast_skip ?? true, GeneratePage ?? true, publish_gen_metadata ?? false, dryRun ?? false, manualAxes);
+			dynamic result = core.RunGridGen(processor, grid_file, output_file_path, this, output_file_path, doOverwrite ?? false, fast_skip ?? true, GeneratePage ?? true, publish_gen_metadata ?? false, dryRun ?? false, manualAxes);
 			return result;
 		}
 
@@ -400,7 +387,7 @@ namespace SDFunctions
 								fill_row_button.click(fn: null, inputs: new string[] { row_mode }, outputs: new string[] { row_value });
 								dynamic modeName = this.validModes[row_mode.value];
 								dynamic buttonUpdate = gr.Button.update(ComVisibleAttribute: modeName is not null && (modeName.valid_list is not null || modeName.type == "boolean"));
-								dynamic outFileUpdate = gr.Textbox.update() ?? gr.Textbox.update(value: $"autonamed_inf_grid_{DateTime.Now.ToString("dd_MM_yyyy")}");
+								dynamic outFileUpdate = gr.Textbox.update() ?? gr.Textbox.update(value: $"autonamed_inf_grid_{DateTime.Now:dd_MM_yyyy}");
 
 								row_mode.change(fn: null, inputs: new string[] { row_mode, output_file_path }, outputs: new string[] { buttonUpdate, outFileUpdate });
 								manualAxes.Add(row_mode);
@@ -463,7 +450,7 @@ namespace SDFunctions
 		{
 			return (p, v) =>
 			{
-				var fieldInfo = p.GetType().GetField(fieldName);
+				FieldInfo fieldInfo = p.GetType().GetField(fieldName);
 				fieldInfo.SetValue(p, v);
 			};
 		}
@@ -529,12 +516,12 @@ namespace SDFunctions
 
 		private List<string> gettitles(dynamic list, string name)
 		{
-			var titles = new List<string>();
-			var enumerator = list.GetIterator();
+			List<string> titles = new List<string>();
+			dynamic enumerator = list.GetIterator();
 			while (enumerator.MoveNext())
 			{
-				var current = enumerator.Current;
-				var title = current.GetAttr(name).ToString();
+				dynamic current = enumerator.Current;
+				dynamic title = current.GetAttr(name).ToString();
 				titles.Add(title);
 			}
 			return titles;
@@ -542,7 +529,7 @@ namespace SDFunctions
 
 		public object RunGridGen(StableDiffusionProcessing passThroughObj, string inputFile, string outputFolderBase, sdinfin sdinfin, string outputFolderName = null, bool doOverwrite = false, bool fastSkip = false, bool generatePage = true, bool publishGenMetadata = true, bool dryRun = false, List<object> manualPairs = null)
 		{
-			var grid = new GridFileHelper(passThroughObj, sdinfin);
+			GridFileHelper grid = new GridFileHelper(passThroughObj, sdinfin);
 			if (manualPairs == null)
 			{
 				string fullInputPath = assetdir + "/" + inputFile;
@@ -551,10 +538,10 @@ namespace SDFunctions
 					throw new Exception($"Non-existent file '{inputFile}'");
 				}
 				// Parse and verify
-				var deserializer = new DeserializerBuilder().Build();
-				using (var reader = new StreamReader(fullInputPath))
+				IDeserializer deserializer = new DeserializerBuilder().Build();
+				using (StreamReader reader = new StreamReader(fullInputPath))
 				{
-					var yamlContent = deserializer.Deserialize(reader);
+					object yamlContent = deserializer.Deserialize(reader);
 					grid.parseYaml(yamlContent as Dictionary<object, object>, inputFile);
 				}
 			}
@@ -576,14 +563,14 @@ namespace SDFunctions
 			{
 				folder = Path.Combine(outputFolderBase, outputFolderName);
 			}
-			var runner = new GridRunner(grid, doOverwrite, folder, passThroughObj, fastSkip);
+			GridRunner runner = new GridRunner(grid, doOverwrite, folder, passThroughObj, fastSkip);
 			runner.Preprocess();
 			if (generatePage)
 			{
 				WebDataBuilder databuilder = new WebDataBuilder();
 				databuilder.EmitWebData(folder, grid, publishGenMetadata, passThroughObj, this.sdfin);
 			}
-			var result = runner.run(dryRun);
+			object result = runner.run(dryRun);
 			if (dryRun)
 			{
 				Console.WriteLine("Infinite Grid dry run succeeded without error");
@@ -612,7 +599,7 @@ namespace SDFunctions
 			imagecache = new List<string>();
 			imagedir = Path.Combine(assetdir, "images");
 			if (!Directory.Exists(imagedir)) Directory.CreateDirectory(imagedir);
-			var imageDir = CleanFilePath(Path.Combine(assetdir, "images"));
+			string imageDir = CleanFilePath(Path.Combine(assetdir, "images"));
 			imagecache = Directory.EnumerateFiles(imageDir, "*.*", SearchOption.AllDirectories)
 									.Where(file => new[] { ".jpg", ".png", ".webp" }.Contains(Path.GetExtension(file)))
 									.Select(file => CleanFilePath(file).Replace(imageDir, "").TrimStart('/'))
@@ -663,7 +650,7 @@ namespace SDFunctions
 
 		public object cleanModel(object arg1, object arg2)
 		{
-			var actualModel = GetModelFor(arg2 as string);
+			string actualModel = GetModelFor(arg2 as string);
 			if (actualModel == null) throw new Exception($"Invalid paramater {arg2} model name not recognized");
 			return chooseBetterFileName(arg2 as string, actualModel);
 		}
@@ -701,7 +688,7 @@ namespace SDFunctions
 		internal static Dictionary<string, object> fixDict(Dictionary<object, object> baddict)
 		{
 			Dictionary<string, object> outdict = new();
-			foreach (var a in baddict)
+			foreach (KeyValuePair<object, object> a in baddict)
 			{
 				outdict.Add((a.Key as string).ToLower().Trim(), a.Value);
 			}
@@ -754,9 +741,9 @@ namespace SDFunctions
 		List<string> nreplacements = new();
 		internal void GridCallApplyHook(dynamic processor, bool dry)
 		{
-			foreach (var replace in replacements)
+			foreach (string replace in replacements)
 				sdfin.ApplyPromptReplace(processor, replace);
-			foreach (var n in nreplacements)
+			foreach (string n in nreplacements)
 				sdfin.applyNegPromptReplace(processor, n);
 		}
 		internal bool GridCallParamAddHook(string p, string v)
@@ -840,7 +827,7 @@ namespace SDFunctions
 
 		internal void validateParams(Dictionary<string, string> parameters)
 		{
-			foreach (var param in parameters)
+			foreach (KeyValuePair<string, string> param in parameters)
 			{
 				parameters[param.Key] = validateSingleParam(param.Key, this.procVariables(param.Value));
 			}
@@ -848,7 +835,7 @@ namespace SDFunctions
 
 		internal string validateSingleParam(string key, string v)
 		{
-			var p = GridGenCore.CleanName(key);
+			string p = GridGenCore.CleanName(key);
 			//def validateSingleParam(p: str, v):
 			//   p = cs_class.cleanName(p)
 			GridSettingMode mode;
@@ -856,7 +843,7 @@ namespace SDFunctions
 			try
 			{
 				mode = parent.validModes[p];
-				var modeType = mode.type;
+				string modeType = mode.type;
 				if (modeType == "integer")
 				{
 					int vint = Convert.ToInt32(v);
@@ -911,7 +898,7 @@ namespace SDFunctions
 			variables = new Dictionary<string, string>();
 			axes = new List<Axis>();
 			Dictionary<string, object> yamlContent = GridGenCore.fixDict(yamlContenta);
-			var varsObj = GridGenCore.fixDict((Dictionary<object, object>)yamlContent["variables"]);
+			Dictionary<string, object> varsObj = GridGenCore.fixDict((Dictionary<object, object>)yamlContent["variables"]);
 			if (varsObj != null)
 			{
 				foreach (KeyValuePair<string, object> entry in varsObj)
@@ -919,7 +906,7 @@ namespace SDFunctions
 					variables[entry.Key.ToString().ToLower()] = entry.Value.ToString();
 				}
 			}
-			var gridObj = GridGenCore.fixDict((Dictionary<object, object>)yamlContent["grid"]);
+			Dictionary<string, object> gridObj = GridGenCore.fixDict((Dictionary<object, object>)yamlContent["grid"]);
 			if (gridObj == null)
 			{
 				throw new Exception("Invalid file " + grid_file + ": missing basic 'grid' root Key");
@@ -943,7 +930,7 @@ namespace SDFunctions
 			{
 				throw new Exception("Invalid file " + grid_file + ": missing basic 'axes' root Key");
 			}
-			foreach (var entry in axesObj)
+			foreach (KeyValuePair<string, object> entry in axesObj)
 			{
 				string id = entry.Key as string;
 				object axisObj = entry.Value;
@@ -1005,23 +992,23 @@ namespace SDFunctions
 		sdinfin sdinfin1;
 		internal string buildJson(dynamic grid, bool publish_gen_metadata, dynamic processor)
 		{
-			var result = new Dictionary<object, object>();
+			Dictionary<object, object> result = new Dictionary<object, object>();
 			result["Title"] = grid.title;
 			result["Description"] = grid.description;
 			result["ext"] = grid.format;
 			if (publish_gen_metadata)
 				result["metadata"] = sdinfin1.webDataGetBaseParamData(processor);
-			var axes = new List<object>();
+			List<object> axes = new List<object>();
 			foreach (Axis axis in grid.axes)
 			{
-				var jaxis = new Dictionary<string, object>();
+				Dictionary<string, object> jaxis = new Dictionary<string, object>();
 				jaxis["id"] = (axis.id as string).ToLower();
 				jaxis["Title"] = axis.title;
 				jaxis["Description"] = axis.description;
-				var values = new List<Dictionary<string, object>>();
-				foreach (var val in axis.values)
+				List<Dictionary<string, object>> values = new List<Dictionary<string, object>>();
+				foreach (AxisValue val in axis.values)
 				{
-					var jval = new Dictionary<string, object>();
+					Dictionary<string, object> jval = new Dictionary<string, object>();
 					jval["Key"] = (val.Key as string).ToLower();
 					jval["Title"] = val.Title;
 					jval["descrption"] = val.Description;
@@ -1053,15 +1040,15 @@ namespace SDFunctions
 			html = System.IO.File.ReadAllText(Path.Combine(assetdir, "page.html"));
 			string xselect = "";
 			string yselect = "";
-			var x2select = WebDataBuilder.radioButtonHtml("x2_axis_selector", "x2_none", null, null);
-			var y2select = WebDataBuilder.radioButtonHtml("y2_axis_selector", "y2_none", null, null);
+			string x2select = WebDataBuilder.radioButtonHtml("x2_axis_selector", "x2_none", null, null);
+			string y2select = WebDataBuilder.radioButtonHtml("y2_axis_selector", "y2_none", null, null);
 			string content = "<div style=\"margin: auto; width: fit-content;\"><table class=\"sel_table\">\\n";
 			string advancedSettings = "";
 			bool primary = true;
 			foreach (Axis axis in grid.axes)
 			{
 				string axisdescrip = GridGenCore.cleanForWeb(axis.description);
-				var trClass = primary ? "primary" : "secondary";
+				string trClass = primary ? "primary" : "secondary";
 				content += "<tr class=\"{trClass}\">\\n<td>\\n<h4>{axis.Title}</h4>\\n";
 				advancedSettings += $"\\n<h4>{axis.title}</h4><div class=\"timer_box\">Auto cycle every " +
 					$"<input style=\"width:30em;\" autocomplete=\"off\" type=\"range\" min=\"0\" max=\"360\" value=\"0\" class=\"form-range timer_range\" id=\"range_tablist_{axis.id}\">" +
@@ -1072,7 +1059,7 @@ namespace SDFunctions
 				content += $"<div class=\"{axisClass}\">{axisdescrip}</div></td>\\n<td><ul class=\"nav nav-tabs\" role=\"tablist\" id=\"tablist_{axis.id}\">\\n";
 				primary = !primary;
 				bool isFirst = Convert.ToBoolean(axis.defaultVal);
-				foreach (var val in axis.values)
+				foreach (AxisValue val in axis.values)
 				{
 					if (axis.defaultVal != null)
 						isFirst = axis.defaultVal == val.Key;
@@ -1089,7 +1076,7 @@ namespace SDFunctions
 				advancedSettings += $"&nbsp;&nbsp;<button class=\"submit\" onclick=\"javascript:toggleShowAllAxis(\\'{axis.id}\\')\">Toggle All</button>";
 				content += "</ul>\\n<div class=\"tab-content\">\\n";
 				isFirst = Convert.ToBoolean(axis.defaultVal);
-				foreach (var val in axis.values)
+				foreach (AxisValue val in axis.values)
 				{
 					string active = isFirst ? " active Show" : "";
 					isFirst = false;
@@ -1153,8 +1140,8 @@ namespace SDFunctions
 
 		public List<AxisValue> BuildValueSetsInner(Axis curAxis)
 		{
-			var result = new List<AxisValue>();
-			foreach (var val in curAxis.values)
+			List<AxisValue> result = new List<AxisValue>();
+			foreach (AxisValue val in curAxis.values)
 				if (!val.Skip || !this.fastskip)
 					result.Add(val);
 			return result;
@@ -1162,7 +1149,7 @@ namespace SDFunctions
 
 		public void buildValueSetList(List<Axis> axislist)
 		{
-			var result = new List<SingleGridCall>();
+			List<SingleGridCall> result = new List<SingleGridCall>();
 			if (axislist.Count == 0)
 				return;
 			if (axislist.Count == 1)
@@ -1170,10 +1157,10 @@ namespace SDFunctions
 				BuildValueSetsInner(axislist[0]);
 			}
 			Axis curAxis = axislist[0];
-			foreach (var obj in BuildValueSetsInner(axislist[0]))
+			foreach (AxisValue obj in BuildValueSetsInner(axislist[0]))
 			{
 				List<AxisValue> newlist = new List<AxisValue>();
-				foreach (var val in curAxis.values)
+				foreach (AxisValue val in curAxis.values)
 				{
 					if (!val.Skip || !this.fastskip)
 					{
@@ -1191,7 +1178,7 @@ namespace SDFunctions
 			buildValueSetList(grid.axes);
 			Console.WriteLine($"Have {valueSets.Count} unique value sets, will go into {this.basePath}");
 
-			foreach (var set in valueSets)
+			foreach (SingleGridCall set in valueSets)
 			{
 				set.value.Filepath = basePath + '/' + string.Join("/", set.values.Select(v => GridGenCore.CleanName(v.Key)).ToList());
 				set.value.Data = string.Join(", ", set.values.Select(v => $"{v.axis.title}={v.Title}").ToList());
@@ -1206,7 +1193,7 @@ namespace SDFunctions
 				else
 				{
 					totalRun += 1;
-					var stepCount = set.parameters.ContainsKey("steps") ? set.parameters["steps"] : promptsKey.steps;
+					dynamic stepCount = set.parameters.ContainsKey("steps") ? set.parameters["steps"] : promptsKey.steps;
 					totalSteps += int.Parse(stepCount ?? "0");
 				}
 			}
@@ -1219,13 +1206,13 @@ namespace SDFunctions
 			grid.parent.core.GridRunnerPreDryHook(this);
 			int iteration = 0;
 			dynamic last = new object();
-			var promptBatchList = new List<dynamic>();
-			foreach (var set in valueSets)
+			List<dynamic> promptBatchList = new List<dynamic>();
+			foreach (SingleGridCall set in valueSets)
 			{
 				if (set.skip) continue;
 				iteration += 1;
 				if (!dry) Console.WriteLine($"on {iteration}/ {totalRun} … Set: {set.value.Data}, file: {set.value.Filepath}");
-				var p2 = promptsKey.MemberwiseClone();
+				dynamic p2 = promptsKey.MemberwiseClone();
 				grid.parent.core.GridRunnerPreDryHook(this);
 				set.applyTo(p2, dry);
 				promptBatchList.Add(p2);
@@ -1234,9 +1221,9 @@ namespace SDFunctions
 			promptBatchList = batchPrompts(promptBatchList, promptsKey);
 			if (dry)
 			{
-				for (var i = 0; i < promptBatchList.Count; i++)
+				for (int i = 0; i < promptBatchList.Count; i++)
 				{
-					var p2 = promptBatchList[i];
+					dynamic p2 = promptBatchList[i];
 					grid.parent.ApplyPromptReplace(p2, grid.parent.core.modelchange[p2]);
 					grid.parent.core.GridRunnerPreDryHook(this);
 					try
@@ -1251,14 +1238,14 @@ namespace SDFunctions
 
 		public List<object> batchPrompts(List<dynamic> promptbatchlist, dynamic prompkey)
 		{
-			var promptGroups = new Dictionary<object, object>();
-			var promptGroup = new List<object>();
+			Dictionary<object, object> promptGroups = new Dictionary<object, object>();
+			List<object> promptGroup = new List<object>();
 			int batchsize = promptbatchlist[0].batch_size;
 			int starto = 0;
 			for (int i = 0; i < promptbatchlist.Count; i++)
 			{
 				dynamic prompt2;
-				var prompt = promptbatchlist[i];
+				dynamic prompt = promptbatchlist[i];
 				if (i > 0)
 					prompt2 = promptbatchlist[i - 1];
 				else prompt2 = prompt;
@@ -1286,11 +1273,11 @@ namespace SDFunctions
 				else promptGroup.Add(prompt);
 			}
 			Console.WriteLine("all have been added to groups");
-			var mergedPrompts = new List<object>();
+			List<object> mergedPrompts = new List<object>();
 			for (int iterator = 0; iterator < promptGroups.Count; iterator++)
 			{
 				bool fail = false;
-				var promgroup = promptGroups[iterator];
+				object promgroup = promptGroups[iterator];
 				if (promgroup is dynamic || promgroup is int)
 				{
 					Console.WriteLine("processing object. adding single item to list.");
@@ -1299,15 +1286,15 @@ namespace SDFunctions
 				else
 				{
 					List<string> noncomplist = new List<string> { "promgroup", "negative_prompt", "all_prompts", "seed", "subseed" };
-					var cprompt = promgroup as List<dynamic>;
-					var promptAttr = cprompt[0];
+					List<dynamic> cprompt = promgroup as List<dynamic>;
+					dynamic promptAttr = cprompt[0];
 					batchsize = promptAttr.batch_size;
 					Console.WriteLine($"Merging prompts {iterator * batchsize} - {iterator * batchsize + batchsize} out of {promptGroups.Count * batchsize}");
-					var complist = new List<List<PropertyInfo>>();
+					List<List<PropertyInfo>> complist = new List<List<PropertyInfo>>();
 					for (int iter = 0; iter == promptGroup.Count; iter++)
 					{
-						var promp1 = promptGroup[iter];
-						var l1 = promp1.GetType().GetProperties().ToList();
+						object promp1 = promptGroup[iter];
+						List<PropertyInfo> l1 = promp1.GetType().GetProperties().ToList();
 						complist.Add(l1);
 						if (l1 != null && iter > 0 && l1.Count == complist[iter - 1].Count)
 						{
@@ -1331,8 +1318,8 @@ namespace SDFunctions
 
 				if (!fail)
 				{
-					var cprompt = promgroup as List<dynamic>;
-					var promptAttr = cprompt[0];
+					List<dynamic> cprompt = promgroup as List<dynamic>;
+					dynamic promptAttr = cprompt[0];
 					dynamic mergedPrompt = promptAttr.MemberwiseClone();
 					mergedPrompt.prompt = string.Join(",", cprompt.Select(p => p.prompt));
 					mergedPrompt.negative_prompt = string.Join(",", cprompt.Select(p => p.negative_prompt));
@@ -1340,9 +1327,9 @@ namespace SDFunctions
 					mergedPrompt.subseed = string.Join(",", cprompt.Select(p => p.subseed));
 					mergedPrompt.batchsize = cprompt.Count;
 					string mergedPath = string.Join(",", appliedSets.Select(p => cprompt));
-					foreach (var prompt in cprompt)
+					foreach (dynamic prompt in cprompt)
 					{
-						var setup2 = this.appliedSets.ContainsKey(prompt) ? this.appliedSets[prompt] : new List<AxisValue>();
+						dynamic setup2 = this.appliedSets.ContainsKey(prompt) ? this.appliedSets[prompt] : new List<AxisValue>();
 						List<string> mergedFilePaths = new List<string>();
 						foreach (AxisValue set in appliedSets[prompt])
 						{
@@ -1369,7 +1356,7 @@ namespace SDFunctions
 				}
 				else
 				{
-					foreach (var promp in promgroup as List<dynamic>)
+					foreach (dynamic promp in promgroup as List<dynamic>)
 					{
 						promp.batch_size = 1;
 					}
@@ -1391,7 +1378,7 @@ namespace SDFunctions
 
 		internal SingleGridCall(List<AxisValue> values)
 		{
-			foreach (var value in values)
+			foreach (AxisValue value in values)
 			{
 				if (value.Skip)
 				{
@@ -1402,8 +1389,8 @@ namespace SDFunctions
 
 		internal void flattenParams(GridFileHelper grid)
 		{
-			var parameters = grid.parameters.ToDictionary(entry => entry.Key, entry => entry.Value) ?? new Dictionary<string, object>();
-			foreach (var val in values)
+			Dictionary<string, object> parameters = grid.parameters.ToDictionary(entry => entry.Key, entry => entry.Value) ?? new Dictionary<string, object>();
+			foreach (AxisValue val in values)
 			{
 				for (int i = 0; i < val.Parameters.Count; i++)
 				{
@@ -1418,7 +1405,7 @@ namespace SDFunctions
 
 		public void applyTo(dynamic p, bool dry)
 		{
-			foreach (var val in parameters)
+			foreach (KeyValuePair<string, object> val in parameters)
 			{
 				string modename = GridGenCore.CleanName(val.Key);
 				GridSettingMode mode = sdfin.validModes[modename];
@@ -1456,10 +1443,10 @@ namespace SDFunctions
 			}
 			else
 			{
-				var obj2 = obj as Dictionary<string, object>;
+				Dictionary<string, object> obj2 = obj as Dictionary<string, object>;
 				title = grid.procVariables(obj2["Title"] as string);
 				defaultVal = grid.procVariables(obj2["default"] as string);
-				var valuesObj = obj2["values"];
+				object valuesObj = obj2["values"];
 				if (title == null || title == "")
 				{
 					throw new Exception("missing Title");
@@ -1474,7 +1461,7 @@ namespace SDFunctions
 				}
 				else
 				{
-					foreach (var val in valuesObj as Dictionary<string, object>)
+					foreach (KeyValuePair<string, object> val in valuesObj as Dictionary<string, object>)
 					{
 						try
 						{
@@ -1494,7 +1481,7 @@ namespace SDFunctions
 			bool isPipeSplit = listStr.Contains("||");
 			List<string> valuesList = listStr.Split(isPipeSplit ? new char[] { '|', '|' } : new char[] { ',' }).ToList();
 
-			var mode = grid.parent.validModes[GridGenCore.CleanName(id as string)];
+			GridSettingMode mode = grid.parent.validModes[GridGenCore.CleanName(id as string)];
 			if (mode.type == "integer")
 				valuesList = GridGenCore.expandNumericListRanges<int>(valuesList);
 			else if (mode.type == "decimal")
@@ -1502,7 +1489,7 @@ namespace SDFunctions
 			int index = 0;
 			for (int i = 0; i < valuesList.Count; i++)
 			{
-				var val = valuesList[i];
+				string val = valuesList[i];
 				try
 				{
 					val = val.Trim();
@@ -1537,7 +1524,7 @@ namespace SDFunctions
 			this.sdfin = grid.parent;
 			this.Key = GridGenCore.cleanID(key.ToString());
 			bool foundKey = false;
-			foreach (var axisValue in axis.values)
+			foreach (AxisValue axisValue in axis.values)
 			{
 				if (axisValue.Key == this.Key)
 				{
@@ -1588,7 +1575,7 @@ namespace SDFunctions
 
 		internal void applyTo(dynamic processor, bool dry)
 		{
-			foreach (var val in Parameters)
+			foreach (KeyValuePair<string, string> val in Parameters)
 			{
 				GridSettingMode mode = sdfin.validModes[GridGenCore.CleanName(val.Key)];
 				if (!dry || mode.dry)
