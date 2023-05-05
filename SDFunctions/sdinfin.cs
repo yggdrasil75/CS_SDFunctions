@@ -8,6 +8,7 @@ using System.IO;
 using System.Linq;
 using System.Net.Configuration;
 using System.Reflection;
+using System.Reflection.Emit;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 using System.Runtime.Remoting.Services;
@@ -45,11 +46,11 @@ namespace SDFunctions
 		{
 			title = "Generate Infinite-Axis Grid";
 			show = true;
-			registerMode("Model", new GridSettingMode(false, "text", applyModel, null, null, core.models, core.cleanModel));
+			registerMode("Model", new GridSettingMode(false, "text", ApplyPromptReplace, null, null, core.models, core.cleanModel));
 			core = new GridGenCore(this);
 		}
 
-		internal void applyModel(object arg1, object arg2)
+		internal void ApplyPromptReplace(object arg1, object arg2)
 		{
 			using (Py.GIL())
 			{
@@ -119,7 +120,7 @@ namespace SDFunctions
 			}
 		}
 
-		private void applyPromptReplace(object arg1, object arg2)
+		internal void applyPromptReplace(object arg1, object arg2)
 		{
 			string prompt = (arg1 as dynamic).prompt;
 			if (prompt != null)
@@ -127,7 +128,7 @@ namespace SDFunctions
 				(arg1 as dynamic).prompt = pr(prompt, arg2 as string);
 			}
 		}
-		private void applyNegPromptReplace(object arg1, object arg2)
+		internal void applyNegPromptReplace(object arg1, object arg2)
 		{
 			string prompt = (arg1 as dynamic).negative_prompt;
 			if (prompt != null)
@@ -163,7 +164,7 @@ namespace SDFunctions
 			{
 				dynamic sd_models = Py.Import("modules.sd_models");
 				//registerMode("Model", GridSettingMode(dry = False, type = "text", apply = applyModel, clean = cleanModel, valid_list = lambda: list(map(lambda m: m.Title, sd_models.checkpoints_list.values()))))
-				registerMode("Model", new GridSettingMode(false, "text", applyModel, null, null, core.models, core.cleanModel));
+				registerMode("Model", new GridSettingMode(false, "text", ApplyPromptReplace, null, null, core.models, core.cleanModel));
 				//registerMode("VAE", GridSettingMode(dry = False, type = "text", apply = applyVae, clean = cleanVae, valid_list = lambda: list(sd_vae.vae_dict.keys()) + ['none', 'auto', 'automatic']))
 				registerMode("vae", new GridSettingMode(false, "text", applyVae, null, null, core.vaelist, core.cleanVae));
 				//registerMode("Sampler", GridSettingMode(dry = True, type = "text", apply = applyField("sampler_name"), valid_list = lambda: list(sd_samplers.all_samplers_map.keys())))
@@ -559,7 +560,7 @@ namespace SDFunctions
 			}
 			else
 			{
-				//TODO
+				//TODO: manual grids
 			}
 			// Now start using it
 			if (string.IsNullOrWhiteSpace(outputFolderName))
@@ -714,13 +715,50 @@ namespace SDFunctions
 			return id;
 		}
 
-		internal static List<string> expandNumericListRanges(List<string> valuesList, Type type)
+		public static List<string> expandNumericListRanges<T>(List<string> inList) where T : struct, IConvertible, IComparable<T>, IEquatable<T>
 		{
-			throw new NotImplementedException();
+			List<T> outList = new List<T>();
+			for (int i = 0; i < inList.Count; i++)
+			{
+				string rawVal = inList[i].Trim();
+				if (rawVal == ".." || rawVal == "..." || rawVal == "....")
+				{
+					if (i < 2 || i + 1 >= inList.Count)
+					{
+						throw new Exception($"Cannot use ellipses notation at index {i}/{inList.Count} - must have at least 2 values before and 1 after.");
+					}
+					T prior = outList[outList.Count - 1];
+					T doublePrior = outList[outList.Count - 2];
+					T after = (T)Convert.ChangeType(inList[i + 1], typeof(T));
+					dynamic step = Convert.ToDouble(prior) - Convert.ToDouble(doublePrior);
+					if ((step < 0) != (Convert.ToDouble(after) - Convert.ToDouble(prior) < 0))
+					{
+						throw new Exception($"Ellipses notation failed for step {step} between {prior} and {after} - steps backwards.");
+					}
+					int count = (int)((Convert.ToDouble(after) - Convert.ToDouble(prior)) / step);
+					for (int x = 1; x < count; x++)
+					{
+						dynamic val = Convert.ToDouble(prior) + x * step;
+						outList.Add((T)Convert.ChangeType(val, typeof(T)));
+					}
+				}
+				else
+				{
+					outList.Add((T)Convert.ChangeType(rawVal, typeof(T)));
+				}
+			}
+			return outList.Select(x => x.ToString()).ToList();
 		}
 
 		List<string> replacements = new();
 		List<string> nreplacements = new();
+		internal void GridCallApplyHook(dynamic processor, bool dry)
+		{
+			foreach (var replace in replacements)
+				sdfin.ApplyPromptReplace(processor, replace);
+			foreach (var n in nreplacements)
+				sdfin.applyNegPromptReplace(processor, n);
+		}
 		internal bool GridCallParamAddHook(string p, string v)
 		{
 			string temp = CleanName(p);
@@ -764,7 +802,7 @@ namespace SDFunctions
 
 		internal void GridRunnerPreDryHook(GridRunner gridRunner)
 		{
-			throw new NotImplementedException();
+			//TODO: probably not actually important.
 		}
 	}
 
@@ -1199,7 +1237,7 @@ namespace SDFunctions
 				for (var i = 0; i < promptBatchList.Count; i++)
 				{
 					var p2 = promptBatchList[i];
-					grid.parent.applyModel(p2, grid.parent.core.modelchange[p2]);
+					grid.parent.ApplyPromptReplace(p2, grid.parent.core.modelchange[p2]);
 					grid.parent.core.GridRunnerPreDryHook(this);
 					try
 					{
@@ -1458,9 +1496,9 @@ namespace SDFunctions
 
 			var mode = grid.parent.validModes[GridGenCore.CleanName(id as string)];
 			if (mode.type == "integer")
-				valuesList = GridGenCore.expandNumericListRanges(valuesList, typeof(int));
+				valuesList = GridGenCore.expandNumericListRanges<int>(valuesList);
 			else if (mode.type == "decimal")
-				valuesList = GridGenCore.expandNumericListRanges(valuesList, typeof(double));
+				valuesList = GridGenCore.expandNumericListRanges<double>(valuesList);
 			int index = 0;
 			for (int i = 0; i < valuesList.Count; i++)
 			{
@@ -1491,10 +1529,12 @@ namespace SDFunctions
 		internal string Filepath;
 		internal object Data;
 		internal Axis axis;
+		internal sdinfin sdfin;
 
 		public AxisValue(Axis axis, GridFileHelper grid, string key, dynamic val)
 		{
 			this.axis = axis;
+			this.sdfin = grid.parent;
 			this.Key = GridGenCore.cleanID(key.ToString());
 			bool foundKey = false;
 			foreach (var axisValue in axis.values)
@@ -1548,7 +1588,17 @@ namespace SDFunctions
 
 		internal void applyTo(dynamic processor, bool dry)
 		{
-			throw new NotImplementedException();
+			foreach (var val in Parameters)
+			{
+				GridSettingMode mode = sdfin.validModes[GridGenCore.CleanName(val.Key)];
+				if (!dry || mode.dry)
+				{
+					if (GridGenCore.CleanName(val.Key) == "model")
+						sdfin.core.modelchange[processor] = val.Value;
+					else mode.apply(processor, val.Value);
+				}
+			}
+
 		}
 	}
 }
