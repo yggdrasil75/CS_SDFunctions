@@ -124,7 +124,10 @@ namespace SDFunctions
 			this.all_subseeds = all_subseeds ?? throw new ArgumentNullException(nameof(all_subseeds));
 			this.iteration = iteration;
 		}
+	}
 
+	public static class CommonSDFuncs
+	{
 
 	}
 }
